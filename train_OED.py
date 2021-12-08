@@ -36,6 +36,7 @@ if __name__ == '__main__':
     print('input_bounds', np.array(input_bounds))
 
     actual_params = DM(actual_params)
+
     normaliser = np.array(normaliser)
 
     n_params = actual_params.size()[0]
@@ -66,6 +67,8 @@ if __name__ == '__main__':
     args = y0, xdot, param_guesses, actual_params, n_observed_variables, n_controlled_inputs, num_inputs, input_bounds, dt, control_interval_time, normaliser
     env = OED_env(*args)
 
+    print('ENV INTITIALISED')
+
     env.mapped_trajectory_solver = env.CI_solver.map(skip, "thread", n_cores)
 
     n_unstables = []
@@ -77,6 +80,8 @@ if __name__ == '__main__':
     policy_delay = 2
     update_count = 0
     explore_rate = 1
+    max_std = 1  # for exploring
+    unstable = 0
 
     for episode in range(int(n_episodes // skip)):
 
@@ -84,10 +89,11 @@ if __name__ == '__main__':
         lower_bounds = np.array([0.0036,0.0089,0.0027,0.8913,2.6738,0.8913,0,0,0.0056,0.0891,2.6738,0.0089,0,0])
         means = np.array([0.23, 0.57, 0.17, 56.55, 169.64, 56.55, 2.56, 2.56, 0.89, 5.65, 169.64, 0.57, 2.56, 2.56])
         stds = np.array([0.11, 0.28, 0.08, 27.83, 83.48, 27.83, 1.28, 1.28, 0.44, 2.78, 83.48, 0.28, 1.28, 1.28])
-        actual_params = np.random.normal(means, stds)
+        actual_params = np.random.normal(means, stds, size=(skip, len(means)))
 
-        while not np.all( lower_bounds < param_guesses <upper_bounds):
-            actual_params = np.random.normal(means, stds)
+        # clip params
+        #while not np.all( lower_bounds < param_guesses <upper_bounds):
+        #   actual_params = np.random.normal(means, stds)
 
         env.param_guesses = DM(actual_params)
 
@@ -159,7 +165,7 @@ if __name__ == '__main__':
             '''Print output'''
             if episode > 1000 // skip:
                 print('training', update_count)
-                t = time.time()
+
                 for hello in range(skip):
                     # print(e, episode, hello, update_count)
                     update_count += 1

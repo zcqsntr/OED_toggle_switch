@@ -6,7 +6,7 @@
     "input_bounds": [[1e-7, 1], [1e-7, 100]],
     "n_controlled_inputs": 2,
     "num_inputs": 10,
-    "dt":0.00025,
+    "dt":0.001,
     "lb":[0.5, 0.0001, 0.00001],
     "ub":[2, 0.001, 0.0001],
     "N_sampling_intervals":144,
