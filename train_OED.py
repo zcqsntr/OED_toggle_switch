@@ -7,6 +7,8 @@ sys.path.append(IMPORT_PATH)
 import math
 from casadi import *
 import numpy as np
+import matplotlib as mpl
+mpl.use('tkagg')
 import matplotlib.pyplot as plt
 from OED_env import *
 from PG_agent import *
@@ -32,6 +34,11 @@ if __name__ == '__main__':
 
     n_episodes, skip, y0, actual_params, input_bounds, n_controlled_inputs, num_inputs, dt, lb, ub, N_sampling_intervals, sampling_time, control_interval_time, n_observed_variables, prior, normaliser = \
         [params[k] for k in params.keys()]
+    k_IPTG, k_aTc, k_L_pm0, k_L_pm, theta_T, theta_aTc, n_aTc, n_T, k_T_pm0, k_T_pm, theta_L, theta_IPTG, n_IPTG, n_L =\
+        actual_params
+
+    # highly identifiable params
+    actual_params = [k_aTc, k_L_pm, n_T, k_T_pm0, theta_L, n_L]
 
     print('input_bounds', np.array(input_bounds))
 
@@ -89,7 +96,8 @@ if __name__ == '__main__':
         lower_bounds = np.array([0.0036,0.0089,0.0027,0.8913,2.6738,0.8913,0,0,0.0056,0.0891,2.6738,0.0089,0,0])
         means = np.array([0.23, 0.57, 0.17, 56.55, 169.64, 56.55, 2.56, 2.56, 0.89, 5.65, 169.64, 0.57, 2.56, 2.56])
         stds = np.array([0.11, 0.28, 0.08, 27.83, 83.48, 27.83, 1.28, 1.28, 0.44, 2.78, 83.48, 0.28, 1.28, 1.28])
-        actual_params = np.random.normal(means, stds, size=(skip, len(means)))
+        #actual_params = np.random.normal(means, stds, size=(skip, len(means)))
+        actual_params = np.random.uniform(low=[k_aTc, k_L_pm, n_T, k_T_pm0, theta_L, n_L], high=[k_aTc, k_L_pm, n_T, k_T_pm0, theta_L, n_L], size = (skip, 6))
 
         # clip params
         #while not np.all( lower_bounds < param_guesses <upper_bounds):
@@ -116,6 +124,7 @@ if __name__ == '__main__':
         env.detFIMs = [[] for _ in range(skip)]
 
         for e in range(0, N_sampling_intervals):
+            print('sampling interval:', e)
 
             ''' Get next experimental input and simualte the result'''
             inputs = [states, sequences]
@@ -154,6 +163,8 @@ if __name__ == '__main__':
 
             '''Check for instability'''
             for trajectory in trajectories:
+                print(np.array(trajectory).shape)
+
                 if np.all([np.all(np.abs(trajectory[i][0]) <= 1) for i in range(len(trajectory))]) and not math.isnan(
                         np.sum(trajectory[-1][0])):  # check for instability
                     agent.memory.append(trajectory)  # monte carlo, fitted
@@ -176,6 +187,14 @@ if __name__ == '__main__':
 
             explore_rate = DQN_agent.get_rate(None, episode, 0, 1, n_episodes / (11 * skip)) * max_std
 
+        trajectory = np.array(trajectories[0])
+        print(trajectory.shape)
+
+        plt.plot([trajectory[i,0][0] for i in range(len(trajectory))])
+        plt.plot([trajectory[i,0][1] for i in range(len(trajectory))])
+        plt.plot([trajectory[i,0][2] for i in range(len(trajectory))])
+        plt.plot([trajectory[i,0][3] for i in range(len(trajectory))])
+        plt.show()
 
     np.save(save_path + 'all_returns.npy', np.array(all_returns))
 
