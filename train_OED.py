@@ -89,8 +89,11 @@ if __name__ == '__main__':
     policy_delay = 2
     update_count = 0
     explore_rate = 1
-    max_std = 1  # for exploring
+    max_std = 0.1  # for exploring
     unstable = 0
+
+    fitted = False
+    recurrent = True
 
     for episode in range(int(n_episodes // skip)):
 
@@ -126,7 +129,7 @@ if __name__ == '__main__':
         env.detFIMs = [[] for _ in range(skip)]
 
         for e in range(0, N_sampling_intervals):
-            print('sampling interval:', e)
+
 
             ''' Get next experimental input and simualte the result'''
             inputs = [states, sequences]
@@ -165,8 +168,6 @@ if __name__ == '__main__':
 
             '''Check for instability'''
             for trajectory in trajectories:
-                print(np.array(trajectory).shape)
-
                 if np.all([np.all(np.abs(trajectory[i][0]) <= 1) for i in range(len(trajectory))]) and not math.isnan(
                         np.sum(trajectory[-1][0])):  # check for instability
                     agent.memory.append(trajectory)  # monte carlo, fitted
@@ -175,28 +176,35 @@ if __name__ == '__main__':
                     print('UNSTABLE!!!')
                     print((trajectory[-1][0]))
 
-            '''Print output'''
-            if episode > 1000 // skip:
-                print('training', update_count)
+        '''Train and print output'''
+        if episode > 10 // skip:
+            print('training', update_count, 'explore_rate:', explore_rate)
+            t = time.time()
+            for hello in range(skip):
 
-                for hello in range(skip):
-                    # print(e, episode, hello, update_count)
-                    update_count += 1
-                    policy = update_count % policy_delay == 0
+                update_count += 1
+                policy = update_count % policy_delay == 0
 
-                    agent.Q_update(policy=policy, fitted=fitted, recurrent=recurrent)
-                print('fitting time', time.time() - t)
+                agent.Q_update(policy=policy, fitted=fitted, recurrent=recurrent)
+
+            print('fitting time', time.time() - t)
+            print('returns', e_returns)
+
+            print()
+
+            print('testing')
 
             explore_rate = DQN_agent.get_rate(None, episode, 0, 1, n_episodes / (11 * skip)) * max_std
 
         trajectory = np.array(trajectories[0])
-        print(trajectory.shape)
 
-        plt.plot([trajectory[i,0][0] for i in range(len(trajectory))])
-        plt.plot([trajectory[i,0][1] for i in range(len(trajectory))])
-        plt.plot([trajectory[i,0][2] for i in range(len(trajectory))])
-        plt.plot([trajectory[i,0][3] for i in range(len(trajectory))])
-        plt.show()
+
+        #plt.plot([trajectory[i,0][0] for i in range(len(trajectory))], label = 'IPTG')
+        #plt.plot([trajectory[i,0][1] for i in range(len(trajectory))], label = 'eTci')
+        #plt.plot([trajectory[i,0][2] for i in range(len(trajectory))], label = 'RFP_LacI')
+        #plt.plot([trajectory[i,0][3] for i in range(len(trajectory))], label = 'GFP_TetR')
+        #plt.legend()
+        #plt.show()
 
     np.save(save_path + 'all_returns.npy', np.array(all_returns))
 
