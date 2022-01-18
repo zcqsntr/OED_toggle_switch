@@ -67,6 +67,8 @@ if __name__ == '__main__':
     total_time = N_sampling_intervals*sampling_time # minutes
     N_control_intervals = total_time//control_interval_time
 
+    print('n control intervals', N_control_intervals)
+
     agent.batch_size = int(N_control_intervals * skip)
     agent.max_length = 11
     agent.mem_size = 500000000
