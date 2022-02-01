@@ -138,6 +138,7 @@ if __name__ == '__main__':
                 actions = agent.get_actions0(inputs, explore_rate=explore_rate, test_episode=False, recurrent=True)
 
             e_actions.append(actions)
+            print(actions)
 
             outputs = env.map_parallel_step(np.array(actions).T, actual_params, continuous=True)
             next_states = []
@@ -199,12 +200,12 @@ if __name__ == '__main__':
         trajectory = np.array(trajectories[0])
 
 
-        #plt.plot([trajectory[i,0][0] for i in range(len(trajectory))], label = 'IPTG')
-        #plt.plot([trajectory[i,0][1] for i in range(len(trajectory))], label = 'eTci')
-        #plt.plot([trajectory[i,0][2] for i in range(len(trajectory))], label = 'RFP_LacI')
-        #plt.plot([trajectory[i,0][3] for i in range(len(trajectory))], label = 'GFP_TetR')
-        #plt.legend()
-        #plt.show()
+        plt.plot([trajectory[i,0][0] for i in range(len(trajectory))], label = 'IPTG')
+        plt.plot([trajectory[i,0][1] for i in range(len(trajectory))], label = 'eTci')
+        plt.plot([trajectory[i,0][2] for i in range(len(trajectory))], label = 'RFP_LacI')
+        plt.plot([trajectory[i,0][3] for i in range(len(trajectory))], label = 'GFP_TetR')
+        plt.legend()
+        plt.show()
 
     np.save(save_path + 'all_returns.npy', np.array(all_returns))
 
