@@ -8,7 +8,12 @@ def xdot(sym_y, sym_theta, sym_u):
 
     IPTGi, aTci, RFP_LacI, GFP_TetR = [sym_y[i] for i in range(4)]
 
-    IPTG, aTc = [sym_u[i] for i in range(2)]
+    #actions are given straight forward
+    #IPTG, aTc = [sym_u[i] for i in range(2)]
+
+    # actions are linear combination
+    IPTG = 1e-7 + sym_u[0]*(1- 1e-7)
+    aTc = 1e-7 + (1-sym_u[0])*(100- 1e-7)
 
     # all params
     #k_IPTG, k_aTc, k_L_pm0, k_L_pm, theta_T, theta_aTc, n_aTc, n_T, k_T_pm0, k_T_pm, theta_L, theta_IPTG, n_IPTG, n_L = [sym_theta[i] for i in range(len(sym_theta.elements()))]

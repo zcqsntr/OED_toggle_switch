@@ -16,6 +16,7 @@ from DQN_agent import *
 from xdot import *
 import tensorflow as tf
 physical_devices = tf.config.list_physical_devices('GPU')
+
 try:
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 except:
@@ -63,17 +64,17 @@ if __name__ == '__main__':
     agent = DDPG_agent(val_layer_sizes=val_layer_sizes, pol_layer_sizes=pol_layer_sizes, policy_act=tf.nn.sigmoid,
                        val_learning_rate=0.0001, pol_learning_rate=pol_learning_rate)  # , pol_learning_rate=0.0001)
 
-
+    agent.batch_size = 256
     total_time = N_sampling_intervals*sampling_time # minutes
     N_control_intervals = total_time//control_interval_time
 
     print('n control intervals', N_control_intervals)
 
     agent.batch_size = int(N_control_intervals * skip)
-    agent.max_length = 11
+    agent.max_length = 144
     agent.mem_size = 500000000
 
-    args = y0, xdot, param_guesses, actual_params, n_observed_variables, n_controlled_inputs, num_inputs, input_bounds, dt, control_interval_time, normaliser
+    args = y0, xdot, param_guesses, actual_params, n_observed_variables, n_controlled_inputs, num_inputs, input_bounds, dt, sampling_time, normaliser
     env = OED_env(*args)
 
     print('ENV INTITIALISED')
@@ -128,6 +129,38 @@ if __name__ == '__main__':
         env.logdetFIMs = [[] for _ in range(skip)]
         env.detFIMs = [[] for _ in range(skip)]
 
+
+        # first run simulation for 24 hours for steady state
+        actions = np.array([[ 1]])
+
+
+        for t in range(0, (24*60)//sampling_time):
+
+            outputs = env.map_parallel_step(np.array(actions).T, actual_params, continuous=True)
+            next_states = []
+           
+
+            for i, o in enumerate(outputs):
+
+                next_state, reward, done, _, u = o
+                e_us[i].append(u)
+                next_states.append(next_state)
+
+                state = states[i]
+
+                action = actions[i]
+
+                transition = (state, action, reward, next_state, done)
+                trajectories[i].append(transition)
+
+            states = next_states
+
+
+        env.reset(partial = True)
+        env.logdetFIMs = [[] for _ in range(skip)]
+        env.detFIMs = [[] for _ in range(skip)]
+
+
         for e in range(0, N_sampling_intervals):
 
 
@@ -138,7 +171,7 @@ if __name__ == '__main__':
                 actions = agent.get_actions0(inputs, explore_rate=explore_rate, test_episode=False, recurrent=True)
 
             e_actions.append(actions)
-            print(actions)
+
 
             outputs = env.map_parallel_step(np.array(actions).T, actual_params, continuous=True)
             next_states = []
@@ -178,7 +211,7 @@ if __name__ == '__main__':
                     print((trajectory[-1][0]))
 
         '''Train and print output'''
-        if episode > 10 // skip:
+        if episode  > 0:
             print('training', update_count, 'explore_rate:', explore_rate)
             t = time.time()
             for hello in range(skip):
@@ -186,7 +219,7 @@ if __name__ == '__main__':
                 update_count += 1
                 policy = update_count % policy_delay == 0
 
-                agent.Q_update(policy=policy, fitted=fitted, recurrent=recurrent)
+                agent.Q_update(policy=policy, fitted=fitted, recurrent=recurrent, low_mem = True)
 
             print('fitting time', time.time() - t)
             print('returns', e_returns)
@@ -200,12 +233,12 @@ if __name__ == '__main__':
         trajectory = np.array(trajectories[0])
 
 
-        plt.plot([trajectory[i,0][0] for i in range(len(trajectory))], label = 'IPTG')
-        plt.plot([trajectory[i,0][1] for i in range(len(trajectory))], label = 'eTci')
-        plt.plot([trajectory[i,0][2] for i in range(len(trajectory))], label = 'RFP_LacI')
-        plt.plot([trajectory[i,0][3] for i in range(len(trajectory))], label = 'GFP_TetR')
-        plt.legend()
-        plt.show()
+        #plt.plot([trajectory[i,0][0] for i in range(len(trajectory))], label = 'IPTG')
+        #plt.plot([trajectory[i,0][1] for i in range(len(trajectory))], label = 'eTci')
+        #plt.plot([trajectory[i,0][2] for i in range(len(trajectory))], label = 'RFP_LacI')
+        #plt.plot([trajectory[i,0][3] for i in range(len(trajectory))], label = 'GFP_TetR')
+        #plt.legend()
+        #plt.show()
 
     np.save(save_path + 'all_returns.npy', np.array(all_returns))
 
