@@ -99,7 +99,7 @@ if __name__ == '__main__':
     policy_delay = 2
     update_count = 0
     explore_rate = 1
-    max_std = 0.1  # for exploring
+    max_std = 1.  # for exploring
     unstable = 0
 
     fitted = False
@@ -221,7 +221,7 @@ if __name__ == '__main__':
         if episode  > 0:
             print('training', update_count, 'explore_rate:', explore_rate)
             t = time.time()
-            for hello in range(skip):
+            for _ in range(skip):
 
                 update_count += 1
                 policy = update_count % policy_delay == 0
