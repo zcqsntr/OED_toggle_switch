@@ -26,7 +26,16 @@ import json
 from scipy.stats import truncnorm
 
 if __name__ == '__main__':
-    save_path = './output'
+
+    if len(sys.argv) == 3:
+        save_path = sys.argv[1] + sys.argv[2] + '/'
+        os.makedirs(save_path, exist_ok=True)
+    elif len(sys.argv) == 2:
+        save_path = sys.argv[1] + '/'
+        os.makedirs(save_path, exist_ok=True)
+    else:
+        save_path = './output'
+
     print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
     n_cores = multiprocessing.cpu_count()
     print('Num CPU cores:', n_cores)
@@ -230,7 +239,7 @@ if __name__ == '__main__':
 
             explore_rate = DQN_agent.get_rate(None, episode, 0, 1, n_episodes / (11 * skip)) * max_std
 
-        trajectory = np.array(trajectories[0])
+        #trajectory = np.array(trajectories[0])
 
 
         #plt.plot([trajectory[i,0][0] for i in range(len(trajectory))], label = 'IPTG')
@@ -240,8 +249,8 @@ if __name__ == '__main__':
         #plt.legend()
         #plt.show()
 
-    np.save(save_path + 'all_returns.npy', np.array(all_returns))
+    np.save(save_path + '/all_returns.npy', np.array(all_returns))
 
-    np.save(save_path + 'n_unstables.npy', np.array(n_unstables))
-    np.save(save_path + 'actions.npy', np.array(agent.actions))
+    np.save(save_path + '/n_unstables.npy', np.array(n_unstables))
+    np.save(save_path + '/actions.npy', np.array(agent.actions))
     agent.save_network(save_path)
