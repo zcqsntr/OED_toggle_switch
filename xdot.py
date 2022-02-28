@@ -32,5 +32,5 @@ def xdot(sym_y, sym_theta, sym_u):
     xdot[1] = daTci
     xdot[2] = dRFP_LacI
     xdot[3] = dGFP_TetR
-
+    print(xdot.shape)
     return xdot

@@ -40,7 +40,7 @@ if __name__ == '__main__':
     n_cores = multiprocessing.cpu_count()
     print('Num CPU cores:', n_cores)
 
-    params = json.load(open('./params.json'))
+    params = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'params.json')))
 
     n_episodes, skip, y0, actual_params, input_bounds, n_controlled_inputs, num_inputs, dt, lb, ub, N_sampling_intervals, sampling_time, control_interval_time, n_observed_variables, prior, normaliser = \
         [params[k] for k in params.keys()]
@@ -140,12 +140,12 @@ if __name__ == '__main__':
 
 
         # first run simulation for 24 hours for steady state
-        actions = np.array([[ 1]])
+        actions = np.array([[ 1]]*skip)
 
 
         for t in range(0, (24*60)//sampling_time):
 
-            outputs = env.map_parallel_step(np.array(actions).T, actual_params, continuous=True)
+            outputs = env.map_parallel_step(actions.T, actual_params, continuous=True)
             next_states = []
            
 
@@ -163,8 +163,6 @@ if __name__ == '__main__':
                 trajectories[i].append(transition)
 
             states = next_states
-
-
         env.reset(partial = True)
         env.logdetFIMs = [[] for _ in range(skip)]
         env.detFIMs = [[] for _ in range(skip)]
