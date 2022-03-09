@@ -15,12 +15,7 @@ from PG_agent import *
 from DQN_agent import *
 from xdot import *
 import tensorflow as tf
-physical_devices = tf.config.list_physical_devices('GPU')
 
-try:
-    tf.config.experimental.set_memory_growth(physical_devices[0], True)
-except:
-    pass
 import multiprocessing
 import json
 from scipy.stats import truncnorm
@@ -36,7 +31,14 @@ if __name__ == '__main__':
     else:
         save_path = './output'
 
-    print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+        physical_devices = tf.config.list_physical_devices('GPU')
+
+        try:
+            tf.config.experimental.set_memory_growth(physical_devices[0], True)
+        except:
+            pass
+
+
     n_cores = multiprocessing.cpu_count()
     print('Num CPU cores:', n_cores)
 
