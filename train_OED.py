@@ -15,11 +15,11 @@ from PG_agent import *
 from DQN_agent import *
 from xdot import *
 import tensorflow as tf
-
+import time
 import multiprocessing
 import json
 from scipy.stats import truncnorm
-
+t = time.time()
 if __name__ == '__main__':
 
     if len(sys.argv) == 3:
@@ -144,7 +144,7 @@ if __name__ == '__main__':
         # first run simulation for 24 hours for steady state
         actions = np.array([[ 1]]*skip)
 
-
+        ts = time.time()
         for t in range(0, (24*60)//sampling_time):
 
             outputs = env.map_parallel_step(actions.T, actual_params, continuous=True)
@@ -219,10 +219,11 @@ if __name__ == '__main__':
                     print('UNSTABLE!!!')
                     print((trajectory[-1][0]))
 
+        print('sim time', time.time() - ts)
         '''Train and print output'''
         if episode  > 0:
             print('training', update_count, 'explore_rate:', explore_rate)
-            t = time.time()
+            tf = time.time()
             for _ in range(skip):
 
                 update_count += 1
@@ -230,12 +231,12 @@ if __name__ == '__main__':
 
                 agent.Q_update(policy=policy, fitted=fitted, recurrent=recurrent, low_mem = True)
 
-            print('fitting time', time.time() - t)
+            print('fitting time', time.time() - tf)
             print('returns', e_returns)
 
             print()
 
-            print('testing')
+            #print('testing')
 
             explore_rate = DQN_agent.get_rate(None, episode, 0, 1, n_episodes / (11 * skip)) * max_std
 
@@ -254,3 +255,4 @@ if __name__ == '__main__':
     np.save(save_path + '/n_unstables.npy', np.array(n_unstables))
     np.save(save_path + '/actions.npy', np.array(agent.actions))
     agent.save_network(save_path)
+    print('total time (hours):', (time.time()-t)/(60*60))
