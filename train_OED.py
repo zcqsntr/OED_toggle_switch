@@ -1,6 +1,6 @@
 import sys
 import os
-IMPORT_PATH = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'RL_OED'), 'imports')
+IMPORT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'RED_master')
 print(IMPORT_PATH)
 sys.path.append(IMPORT_PATH)
 
@@ -10,9 +10,8 @@ import numpy as np
 import matplotlib as mpl
 mpl.use('tkagg')
 import matplotlib.pyplot as plt
-from OED_env import *
-from PG_agent import *
-from DQN_agent import *
+from RED.agents.continuous_agents import RT3D_agent
+from RED.environments.OED_env import OED_env
 from xdot import *
 import tensorflow as tf
 import time
@@ -72,7 +71,7 @@ if __name__ == '__main__':
     val_layer_sizes = [n_observed_variables + 1 + n_controlled_inputs, n_observed_variables + 1 + n_controlled_inputs,
                        hidden_layer_size[0], hidden_layer_size[1], 1]
 
-    agent = DDPG_agent(val_layer_sizes=val_layer_sizes, pol_layer_sizes=pol_layer_sizes, policy_act=tf.nn.sigmoid,
+    agent = RT3D_agent(val_layer_sizes=val_layer_sizes, pol_layer_sizes=pol_layer_sizes, policy_act=tf.nn.sigmoid,
                        val_learning_rate=0.0001, pol_learning_rate=pol_learning_rate)  # , pol_learning_rate=0.0001)
 
     agent.batch_size = 256
@@ -177,7 +176,7 @@ if __name__ == '__main__':
             inputs = [states, sequences]
 
             if e%(N_sampling_intervals//N_control_intervals) == 0: # if we need to get a new control
-                actions = agent.get_actions0(inputs, explore_rate=explore_rate, test_episode=False, recurrent=True)
+                actions = agent.get_actions(inputs, explore_rate=explore_rate, test_episode=False, recurrent=True)
 
             e_actions.append(actions)
 
@@ -217,7 +216,7 @@ if __name__ == '__main__':
                 else:
                     unstable += 1
                     print('UNSTABLE!!!')
-                    print((trajectory[-1][0]))
+                    print((trajectory))
 
         print('sim time', time.time() - ts)
         '''Train and print output'''
@@ -229,22 +228,23 @@ if __name__ == '__main__':
                 update_count += 1
                 policy = update_count % policy_delay == 0
 
-                agent.Q_update(policy=policy, fitted=fitted, recurrent=recurrent, low_mem = True)
+                agent.Q_update(policy=policy, fitted=fitted, recurrent=recurrent, low_mem = False)
 
             print('fitting time', time.time() - tf)
             print('returns', e_returns)
-
+            print('memory size', len(agent.states))
             print()
 
             #print('testing')
 
-            explore_rate = DQN_agent.get_rate(None, episode, 0, 1, n_episodes / (11 * skip)) * max_std
+            explore_rate = agent.get_rate(episode, 0, 1, n_episodes / (11 * skip)) * max_std
 
         #trajectory = np.array(trajectories[0])
 
 
         #plt.plot([trajectory[i,0][0] for i in range(len(trajectory))], label = 'IPTG')
         #plt.plot([trajectory[i,0][1] for i in range(len(trajectory))], label = 'eTci')
+        #
         #plt.plot([trajectory[i,0][2] for i in range(len(trajectory))], label = 'RFP_LacI')
         #plt.plot([trajectory[i,0][3] for i in range(len(trajectory))], label = 'GFP_TetR')
         #plt.legend()
