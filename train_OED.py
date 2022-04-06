@@ -22,6 +22,7 @@ t = time.time()
 if __name__ == '__main__':
 
     if len(sys.argv) == 3:
+        mem_size = 2000000
         save_path = sys.argv[1] + sys.argv[2] + '/'
         os.makedirs(save_path, exist_ok=True)
     elif len(sys.argv) == 2:
@@ -29,7 +30,7 @@ if __name__ == '__main__':
         os.makedirs(save_path, exist_ok=True)
     else:
         save_path = './output'
-
+        mem_size = 300000
         physical_devices = tf.config.list_physical_devices('GPU')
 
         try:
@@ -82,7 +83,7 @@ if __name__ == '__main__':
 
     agent.batch_size = int(N_control_intervals * skip)
     agent.max_length = 144
-    agent.mem_size = 500000000
+    agent.mem_size = mem_size
 
     args = y0, xdot, param_guesses, actual_params, n_observed_variables, n_controlled_inputs, num_inputs, input_bounds, dt, sampling_time, normaliser
     env = OED_env(*args)
@@ -220,7 +221,7 @@ if __name__ == '__main__':
 
         print('sim time', time.time() - ts)
         '''Train and print output'''
-        if episode  > 0:
+        if episode  > 100:
             print('training', update_count, 'explore_rate:', explore_rate)
             tf = time.time()
             for _ in range(skip):
