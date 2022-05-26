@@ -38,11 +38,11 @@ if __name__ == '__main__':
         mem_size = 2000000
 
         if int(sys.argv[2]) in [1,2,3]:
-            n_episodes = 2000
-        elif int(sys.argv[2]) in [4,5,6]:
             n_episodes = 5000
-        elif int(sys.argv[2]) in [7,8,9]:
+        elif int(sys.argv[2]) in [4,5,6]:
             n_episodes = 10000
+        elif int(sys.argv[2]) in [7,8,9]:
+            n_episodes = 20000
 
 
         save_path = sys.argv[1] + sys.argv[2] + '/'
@@ -52,7 +52,7 @@ if __name__ == '__main__':
         os.makedirs(save_path, exist_ok=True)
     else:
         save_path = './output'
-        mem_size = 300000
+        mem_size = 600000
         physical_devices = tf.config.list_physical_devices('GPU')
 
         try:
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     print('n control intervals', N_control_intervals)
 
     agent.batch_size = int(N_control_intervals * skip)
-    agent.max_length = 144
+    agent.max_length = N_sampling_intervals
     agent.mem_size = mem_size
 
     args = y0, xdot, param_guesses, actual_params, n_observed_variables, n_controlled_inputs, num_inputs, input_bounds, dt, sampling_time, normaliser
@@ -176,6 +176,18 @@ if __name__ == '__main__':
                 trajectories[i].append(transition)
 
             states = next_states
+
+        e_returns = [0 for _ in range(skip)]
+
+        e_actions = []
+
+        e_exploit_flags = []
+        e_rewards = [[] for _ in range(skip)]
+        e_us = [[] for _ in range(skip)]
+        trajectories = [[] for _ in range(skip)]
+
+        sequences = [[[0] * pol_layer_sizes[1]] for _ in range(skip)]
+        states = [env.get_initial_RL_state_parallel() for i in range(skip)]
         env.reset(partial = True)
         env.logdetFIMs = [[] for _ in range(skip)]
         env.detFIMs = [[] for _ in range(skip)]
@@ -223,7 +235,7 @@ if __name__ == '__main__':
 
             '''Check for instability'''
             for trajectory in trajectories:
-                if np.all([np.all(np.abs(trajectory[i][0]) <= 1) for i in range(len(trajectory))]) and not math.isnan(
+                if  not math.isnan(
                         np.sum(trajectory[-1][0])):  # check for instability
                     agent.memory.append(trajectory)  # monte carlo, fitted
 
@@ -254,17 +266,17 @@ if __name__ == '__main__':
             #print('testing')
 
             explore_rate = agent.get_rate(episode, 0, 1, n_episodes / (11 * skip)) * max_std
-
-        #trajectory = np.array(trajectories[0])
-
-
-        #plt.plot([trajectory[i,0][0] for i in range(len(trajectory))], label = 'IPTG')
-        #plt.plot([trajectory[i,0][1] for i in range(len(trajectory))], label = 'eTci')
         #
-        #plt.plot([trajectory[i,0][2] for i in range(len(trajectory))], label = 'RFP_LacI')
-        #plt.plot([trajectory[i,0][3] for i in range(len(trajectory))], label = 'GFP_TetR')
-        #plt.legend()
-        #plt.show()
+        # trajectory = np.array(trajectories[0])
+        #
+        #
+        # plt.plot([trajectory[i,0][0] for i in range(len(trajectory))], label = 'IPTG')
+        # plt.plot([trajectory[i,0][1] for i in range(len(trajectory))], label = 'eTci')
+        #
+        # plt.plot([trajectory[i,0][2] for i in range(len(trajectory))], label = 'RFP_LacI')
+        # plt.plot([trajectory[i,0][3] for i in range(len(trajectory))], label = 'GFP_TetR')
+        # plt.legend()
+        # plt.show()
 
     np.save(save_path + '/all_returns.npy', np.array(all_returns))
 
