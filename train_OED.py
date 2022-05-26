@@ -205,6 +205,7 @@ if __name__ == '__main__':
                     e_rewards[i].append(reward)
                     e_returns[i] += reward
 
+
             # print('sequences', np.array(sequences).shape)
             # print('sequences', sequences[0])
             states = next_states
@@ -214,10 +215,13 @@ if __name__ == '__main__':
                 if np.all([np.all(np.abs(trajectory[i][0]) <= 1) for i in range(len(trajectory))]) and not math.isnan(
                         np.sum(trajectory[-1][0])):  # check for instability
                     agent.memory.append(trajectory)  # monte carlo, fitted
+
                 else:
                     unstable += 1
                     print('UNSTABLE!!!')
                     print((trajectory))
+
+        all_returns.extend(e_returns)
 
         print('sim time', time.time() - ts)
         '''Train and print output'''
@@ -230,7 +234,7 @@ if __name__ == '__main__':
                 policy = update_count % policy_delay == 0
 
                 agent.Q_update(policy=policy, fitted=fitted, recurrent=recurrent, low_mem = False)
-
+            print('episode:', episode)
             print('fitting time', time.time() - tf)
             print('returns', e_returns)
             print('memory size', len(agent.states))
