@@ -21,8 +21,30 @@ from scipy.stats import truncnorm
 t = time.time()
 if __name__ == '__main__':
 
+
+
+
+    n_cores = multiprocessing.cpu_count()
+    print('Num CPU cores:', n_cores)
+
+    params = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'params.json')))
+
+    n_episodes, skip, y0, actual_params, input_bounds, n_controlled_inputs, num_inputs, dt, lb, ub, N_sampling_intervals, sampling_time, control_interval_time, n_observed_variables, prior, normaliser = \
+        [params[k] for k in params.keys()]
+    k_IPTG, k_aTc, k_L_pm0, k_L_pm, theta_T, theta_aTc, n_aTc, n_T, k_T_pm0, k_T_pm, theta_L, theta_IPTG, n_IPTG, n_L =\
+        actual_params
+
     if len(sys.argv) == 3:
         mem_size = 2000000
+
+        if int(sys.argv[2]) in [1,2,3]:
+            n_episodes = 2000
+        elif int(sys.argv[2]) in [4,5,6]:
+            n_episodes = 5000
+        elif int(sys.argv[2]) in [7,8,9]:
+            n_episodes = 10000
+
+
         save_path = sys.argv[1] + sys.argv[2] + '/'
         os.makedirs(save_path, exist_ok=True)
     elif len(sys.argv) == 2:
@@ -37,17 +59,6 @@ if __name__ == '__main__':
             tf.config.experimental.set_memory_growth(physical_devices[0], True)
         except:
             pass
-
-
-    n_cores = multiprocessing.cpu_count()
-    print('Num CPU cores:', n_cores)
-
-    params = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'params.json')))
-
-    n_episodes, skip, y0, actual_params, input_bounds, n_controlled_inputs, num_inputs, dt, lb, ub, N_sampling_intervals, sampling_time, control_interval_time, n_observed_variables, prior, normaliser = \
-        [params[k] for k in params.keys()]
-    k_IPTG, k_aTc, k_L_pm0, k_L_pm, theta_T, theta_aTc, n_aTc, n_T, k_T_pm0, k_T_pm, theta_L, theta_IPTG, n_IPTG, n_L =\
-        actual_params
 
     # highly identifiable params
     actual_params = [k_aTc, k_L_pm, n_T, k_T_pm0, theta_L, n_L]
