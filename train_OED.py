@@ -222,7 +222,7 @@ if __name__ == '__main__':
         print('sim time', time.time() - ts)
         '''Train and print output'''
         if episode  > 100:
-            print('training', update_count, 'explore_rate:', explore_rate)
+            print('training', episode*skip, 'explore_rate:', explore_rate)
             tf = time.time()
             for _ in range(skip):
 
