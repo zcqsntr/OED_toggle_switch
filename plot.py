@@ -2,9 +2,9 @@ import matplotlib as mpl
 mpl.use('tkagg')
 import matplotlib.pyplot as plt
 import numpy as np
-path = '/Users/neythen/Desktop/Projects/OED_toggle_switch/results'
+path = '/Users/neythen/Desktop/Projects/OED_toggle_switch/partial_results_01062022'
 
-for i in range(1, 11):
+for i in range(1, 7):
 
     print()
     print(i)

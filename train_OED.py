@@ -20,29 +20,41 @@ import json
 from scipy.stats import truncnorm
 t = time.time()
 if __name__ == '__main__':
-
-
-
-
     n_cores = multiprocessing.cpu_count()
     print('Num CPU cores:', n_cores)
 
     params = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'params.json')))
-
+    pol_learning_rate = 0.00005
+    val_learning_rate = 0.0001
+    hidden_layer_size = [[64, 64], [128, 128]]
     n_episodes, skip, y0, actual_params, input_bounds, n_controlled_inputs, num_inputs, dt, lb, ub, N_sampling_intervals, sampling_time, control_interval_time, n_observed_variables, prior, normaliser = \
         [params[k] for k in params.keys()]
     k_IPTG, k_aTc, k_L_pm0, k_L_pm, theta_T, theta_aTc, n_aTc, n_T, k_T_pm0, k_T_pm, theta_L, theta_IPTG, n_IPTG, n_L =\
         actual_params
-
+    pol_learning_rates = [0.00005, 0.00001, 0.000005]
+    hidden_layer_sizes = [ [[64], [128]], [[64], [128, 128]], [[64, 64], [128]], [[64, 64], [128, 128]] ]
     if len(sys.argv) == 3:
         mem_size = 2000000
-
+        '''
         if int(sys.argv[2]) in [1,2,3]:
             n_episodes = 5000
         elif int(sys.argv[2]) in [4,5,6]:
             n_episodes = 10000
         elif int(sys.argv[2]) in [7,8,9]:
             n_episodes = 20000
+        '''
+
+        # for parameter scan
+        exp = int(sys.argv[2]) - 1
+        # 3 learning rates
+        # 4 hl sizes
+        # 3 repeats per combination
+        n_repeats = 3
+        comb = exp // n_repeats
+        pol_learning_rate = pol_learning_rates[comb//len(hidden_layer_sizes)]
+        val_learning_rate = pol_learning_rate*2
+        hidden_layer_size = hidden_layer_sizes[comb%len(hidden_layer_sizes)]
+
 
 
         save_path = sys.argv[1] + sys.argv[2] + '/'
@@ -76,8 +88,7 @@ if __name__ == '__main__':
 
     param_guesses = actual_params
 
-    pol_learning_rate = 0.00005
-    hidden_layer_size = [[64, 64], [128, 128]]
+
     pol_layer_sizes = [n_observed_variables + 1, n_observed_variables + 1 + n_controlled_inputs, hidden_layer_size[0],
                        hidden_layer_size[1], n_controlled_inputs]
     val_layer_sizes = [n_observed_variables + 1 + n_controlled_inputs, n_observed_variables + 1 + n_controlled_inputs,
@@ -235,9 +246,11 @@ if __name__ == '__main__':
 
             '''Check for instability'''
             for trajectory in trajectories:
-                if  not math.isnan(
-                        np.sum(trajectory[-1][0])):  # check for instability
-                    agent.memory.append(trajectory)  # monte carlo, fitted
+                if  not math.isnan(np.sum(trajectory[-1][0])):  # check for instability
+                    agent.memory.append(trajectory)
+                    #print([np.max(trajectory[i][0]) for i in range(len(trajectory))])
+
+                #if np.all([np.all(np.abs(trajectory[i][0]) <= 1) for i in range(len(trajectory))]) and not math.isnan(np.sum(trajectory[-1][0])):  # check for instability
 
                 else:
                     unstable += 1
